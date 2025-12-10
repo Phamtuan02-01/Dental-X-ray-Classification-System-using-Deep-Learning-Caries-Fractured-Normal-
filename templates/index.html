@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Phân tích X-quang - Dental AI{% endblock %}
+
+{% block content %}
+<div class="container">
+            <!-- Hero Section -->
+            <div class="hero-section">
+                <h1 class="hero-title">Phân tích X-quang răng với AI</h1>
+                <p class="hero-subtitle">Nhận diện nhanh chóng và chính xác các bệnh lý răng miệng từ ảnh X-quang</p>
+            </div>
+
+            <!-- Upload Card -->
+            <div class="upload-card">
+                <form action="{{ url_for('predict') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
+                    <div class="upload-zone" id="uploadArea">
+                        <div class="upload-content">
+                            <div class="upload-icon">📷</div>
+                            <h3>Tải lên ảnh X-quang</h3>
+                            <p>Kéo thả file vào đây hoặc click để chọn</p>
+                            <span class="file-types">PNG, JPG, JPEG • Tối đa 16MB</span>
+                        </div>
+                        <input type="file" name="file" id="fileInput" accept="image/*" required>
+                    </div>
+
+                    <div id="preview" class="preview-section" style="display: none;">
+                        <img id="previewImage" src="" alt="Preview">
+                        <div class="preview-actions">
+                            <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                                <span>↻</span> Chọn ảnh khác
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <span>🔍</span> Bắt đầu phân tích
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Info Cards -->
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="info-icon">🎯</div>
+                    <h3>Độ chính xác cao</h3>
+                    <p>Sử dụng Ensemble Model với CBAM attention, độ chính xác ~92%</p>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon">⚡</div>
+                    <h3>Phân tích nhanh</h3>
+                    <p>Kết quả trong vài giây với công nghệ Deep Learning</p>
+                </div>
+                <div class="info-card">
+                    <div class="info-icon">🔬</div>
+                    <h3>Nhận diện 3 loại</h3>
+                    <p>Sâu răng • Gãy răng • Răng bình thường</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

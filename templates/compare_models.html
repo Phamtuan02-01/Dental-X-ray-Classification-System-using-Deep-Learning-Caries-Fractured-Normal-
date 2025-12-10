@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}So sánh Models - Dental AI{% endblock %}
+
+{% block content %}
+<div class="container">
+            {% if not show_results %}
+            <!-- Upload Section -->
+            <div class="hero-section">
+                <h1 class="hero-title">So sánh 2 Models AI</h1>
+                <p class="hero-subtitle">Upload ảnh X-quang để xem sự khác biệt giữa CBAM Ensemble và ResNet50</p>
+            </div>
+
+            <div class="upload-card">
+                <form action="{{ url_for('compare_models') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
+                    <div class="upload-zone" id="uploadArea">
+                        <div class="upload-content">
+                            <div class="upload-icon">📷</div>
+                            <h3>Tải lên ảnh X-quang</h3>
+                            <p>Kéo thả file vào đây hoặc click để chọn</p>
+                            <span class="file-types">PNG, JPG, JPEG • Tối đa 16MB</span>
+                        </div>
+                        <input type="file" name="file" id="fileInput" accept="image/*" required>
+                    </div>
+
+                    <div id="preview" class="preview-section" style="display: none;">
+                        <img id="previewImage" src="" alt="Preview">
+                        <div class="preview-actions">
+                            <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                                <span>↻</span> Chọn ảnh khác
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <span>🔍</span> So sánh với 2 Models
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Model Info Cards -->
+            <div class="models-info-grid">
+                <div class="model-info-card">
+                    <div class="model-info-icon">🎯</div>
+                    <h3>ResNet50</h3>
+                    <p>Single ResNet50 model - Kiến trúc classic</p>
+                </div>
+                <div class="model-info-card">
+                    <div class="model-info-icon">🤖</div>
+                    <h3>CBAM Ensemble (MobileNetV2)</h3>
+                    <p>Kết hợp 4 models với CBAM attention + Focal Loss</p>
+                </div>
+            </div>
+
+            {% else %}
+            <!-- Comparison Results -->
+            <div class="result-header">
+                <h1>Kết quả so sánh Models</h1>
+                <p>So sánh giữa CBAM Ensemble và ResNet50</p>
+            </div>
+
+            <!-- Original Image -->
+            <div class="compare-image-section">
+                <h3>Ảnh X-quang đã phân tích</h3>
+                <img src="{{ url_for('static', filename='uploads/' + filename) }}" alt="X-ray" class="compare-image">
+            </div>
+
+            <!-- Comparison Grid -->
+            <div class="comparison-grid">
+                <!-- ResNet50 Result - BÊN TRÁI -->
+                <div class="model-compare-card resnet">
+                    <div class="model-badge">
+                        <span class="badge-label">ResNet50</span>
+                        <span class="badge-desc">Single model</span>
+                    </div>
+                    
+                    <div class="compare-diagnosis {{ resnet_result.class_vn.lower()[:3] }}">
+                        <div class="compare-result-badge">
+                            <span class="result-icon">
+                                {% if resnet_result.class_vn == 'Sâu răng' %}🦷
+                                {% elif resnet_result.class_vn == 'Gãy răng' %}⚠️
+                                {% else %}✓{% endif %}
+                            </span>
+                            <div>
+                                <div class="result-title">{{ resnet_result.class_vn }}</div>
+                                <div class="result-confidence">{{ "%.2f"|format(resnet_result.confidence) }}%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="compare-probabilities">
+                        <h4>Phân bố xác suất</h4>
+                        {% for class_name, prob in resnet_result.probabilities.items() %}
+                            <div class="compare-prob-row">
+                                <span class="compare-prob-name">{{ class_name }}</span>
+                                <span class="compare-prob-value">{{ "%.1f"|format(prob) }}%</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- CBAM Result - BÊN PHẢI -->
+                <div class="model-compare-card cbam">
+                    <div class="model-badge">
+                        <span class="badge-label">CBAM Ensemble (MobileNetV2)</span>
+                        <span class="badge-desc">4 models • CBAM + Focal Loss</span>
+                    </div>
+                    
+                    <div class="compare-diagnosis {{ cbam_result.class_vn.lower()[:3] }}">
+                        <div class="compare-result-badge">
+                            <span class="result-icon">
+                                {% if cbam_result.class_vn == 'Sâu răng' %}🦷
+                                {% elif cbam_result.class_vn == 'Gãy răng' %}⚠️
+                                {% else %}✓{% endif %}
+                            </span>
+                            <div>
+                                <div class="result-title">{{ cbam_result.class_vn }}</div>
+                                <div class="result-confidence">{{ "%.2f"|format(cbam_result.confidence) }}%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="compare-probabilities">
+                        <h4>Phân bố xác suất</h4>
+                        {% for class_name, prob in cbam_result.probabilities.items() %}
+                            <div class="compare-prob-row">
+                                <span class="compare-prob-name">{{ class_name }}</span>
+                                <span class="compare-prob-value">{{ "%.1f"|format(prob) }}%</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comparison Summary -->
+            <div class="comparison-summary">
+                <h3>📊 Tóm tắt so sánh</h3>
+                
+                <div class="summary-content">
+                    {% if comparison.same_prediction %}
+                        <div class="verdict verdict-same">
+                            <span class="verdict-icon">✓</span>
+                            <span>Cả 2 models đều dự đoán: <strong>{{ cbam_result.class_vn }}</strong></span>
+                        </div>
+                    {% else %}
+                        <div class="verdict verdict-different">
+                            <span class="verdict-icon">⚠</span>
+                            <span>2 models có kết quả khác nhau</span>
+                        </div>
+                        <div class="verdict-details">
+                            <span><strong>ResNet50:</strong> {{ resnet_result.class_vn }}</span>
+                            <span><strong>CBAM:</strong> {{ cbam_result.class_vn }}</span>
+                        </div>
+                    {% endif %}
+
+                    <div class="confidence-comparison">
+                        <div class="confidence-item">
+                            <span class="conf-label">ResNet50</span>
+                            <span class="conf-value">{{ "%.2f"|format(resnet_result.confidence) }}%</span>
+                        </div>
+                        <div class="confidence-item">
+                            <span class="conf-label">CBAM Ensemble</span>
+                            <span class="conf-value">{{ "%.2f"|format(cbam_result.confidence) }}%</span>
+                        </div>
+                        <div class="confidence-item highlight">
+                            <span class="conf-label">Chênh lệch</span>
+                            <span class="conf-value">{{ "%.2f"|format(comparison.confidence_diff) }}%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="result-actions center">
+                <a href="{{ url_for('compare_models') }}" class="btn btn-primary">
+                    <span>↻</span> So sánh ảnh khác
+                </a>
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                    <span>🏠</span> Về trang chủ
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

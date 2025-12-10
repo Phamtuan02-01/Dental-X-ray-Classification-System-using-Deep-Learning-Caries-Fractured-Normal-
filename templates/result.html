@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Kết quả phân tích - Dental AI{% endblock %}
+
+{% block content %}
+<div class="container">
+            <!-- Result Header -->
+            <div class="result-header">
+                <h1>Kết quả phân tích</h1>
+                <p>Phân tích bằng CBAM Ensemble Model</p>
+            </div>
+
+            <!-- Result Grid -->
+            <div class="result-grid">
+                <!-- Image Section -->
+                <div class="result-image-card">
+                    <h3>Ảnh X-quang</h3>
+                    <img src="{{ url_for('static', filename='uploads/' + filename) }}" alt="X-Ray">
+                </div>
+
+                <!-- Diagnosis Section -->
+                <div class="result-diagnosis-card">
+                    <h3>Chẩn đoán</h3>
+                    
+                    <div class="diagnosis-result {{ prediction.lower()[:3] }}">
+                        <div class="diagnosis-badge">
+                            <span class="badge-icon">
+                                {% if prediction == 'Sâu răng' %}🦷
+                                {% elif prediction == 'Gãy răng' %}⚠️
+                                {% else %}✓{% endif %}
+                            </span>
+                            <div>
+                                <div class="badge-title">{{ prediction }}</div>
+                                <div class="badge-confidence">Độ tin cậy: {{ confidence }}%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Severity Level Section (NEW) -->
+                    {% if severity_level %}
+                    <div class="severity-section">
+                        <h4>Mức độ nghiêm trọng</h4>
+                        <div class="severity-badge {{ medical_advice.urgency_color }}">
+                            <span class="severity-icon">{{ medical_advice.icon }}</span>
+                            <div class="severity-info">
+                                <div class="severity-level">{{ severity_level }}</div>
+                                <div class="severity-urgency">{{ medical_advice.urgency }}</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Severity Score Bar -->
+                        <div class="severity-score-bar">
+                            <div class="score-label">Điểm đánh giá: {{ severity_score }}/100</div>
+                            <div class="score-bar-wrap">
+                                <div class="score-bar-fill {{ medical_advice.urgency_color }}" 
+                                     style="width: {{ severity_score }}%"></div>
+                            </div>
+                            <div class="score-markers">
+                                <span class="marker" style="left: 35%">Nhẹ</span>
+                                <span class="marker" style="left: 65%">Trung bình</span>
+                                <span class="marker" style="right: 5%">Nặng</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="probability-section">
+                        <h4>Phân bố xác suất</h4>
+                        {% for class_name, prob in probabilities.items() %}
+                            <div class="prob-row">
+                                <span class="prob-name">{{ class_name }}</span>
+                                <div class="prob-bar-wrap">
+                                    <div class="prob-bar-fill" style="width: {{ prob }}%"></div>
+                                </div>
+                                <span class="prob-percent">{{ "%.1f"|format(prob) }}%</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Medical Advice Section (UPDATED) -->
+                    <div class="medical-advice-section">
+                        <div class="advice-header">
+                            <div class="advice-icon">{{ medical_advice.icon }}</div>
+                            <h4>{{ medical_advice.title }}</h4>
+                        </div>
+                        
+                        <div class="advice-description">
+                            <p>{{ medical_advice.description }}</p>
+                        </div>
+
+                        {% if medical_advice.symptoms %}
+                        <div class="advice-block">
+                            <h5>🩺 Triệu chứng</h5>
+                            <ul>
+                                {% for symptom in medical_advice.symptoms %}
+                                <li>{{ symptom }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        {% if medical_advice.risks %}
+                        <div class="advice-block risks">
+                            <h5>⚠️ Nguy cơ nếu không điều trị</h5>
+                            <ul>
+                                {% for risk in medical_advice.risks %}
+                                <li>{{ risk }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        <div class="advice-block recommendations">
+                            <h5>💊 Khuyến nghị điều trị</h5>
+                            <ul>
+                                {% for recommendation in medical_advice.recommendations %}
+                                <li>{{ recommendation }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+
+                        <div class="disclaimer">
+                            <p>⚠️ <strong>Lưu ý quan trọng:</strong> Kết quả phân tích này chỉ mang tính tham khảo và được tạo ra bởi hệ thống AI. Vui lòng đến gặp nha sĩ chuyên nghiệp để được khám, chẩn đoán và điều trị chính xác.</p>
+                        </div>
+                    </div>
+
+                    <div class="result-actions">
+                        <a href="{{ url_for('index') }}" class="btn btn-primary">
+                            <span>↻</span> Phân tích ảnh khác
+                        </a>
+                        <button onclick="window.print()" class="btn btn-secondary">
+                            <span>🖨</span> In kết quả
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
