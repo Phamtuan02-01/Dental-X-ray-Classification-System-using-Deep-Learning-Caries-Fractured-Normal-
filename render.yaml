@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: dental-xray-classification
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app_keras3:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: KERAS_BACKEND
+        value: tensorflow
+    disk:
+      name: dental-models
+      mountPath: /opt/render/project/src/models
+      sizeGB: 1

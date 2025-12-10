@@ -364,7 +364,9 @@ if __name__ == '__main__':
         load_ensemble_models()
         print("\n🚀 Server đang chạy tại: http://127.0.0.1:5000")
         print("="*50 + "\n")
-        app.run(debug=True, host='0.0.0.0', port=5000)
+        # Sử dụng cổng từ biến môi trường cho production (Render)
+        port = int(os.environ.get('PORT', 5000))
+        app.run(debug=False, host='0.0.0.0', port=port)
     except Exception as e:
         print(f"\n❌ Lỗi khởi động: {str(e)}")
         print("Vui lòng kiểm tra lại models trong thư mục models/\n")
